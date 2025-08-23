@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -20,8 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.yiluo.fck.ui.screens.select.HomeViewModel
-import jnu.kulipai.exam.ui.anim.AnimatedNavigation
+import com.yiluo.fck.ui.anim.AnimatedNavigation
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Destination<RootGraph>(style = AnimatedNavigation::class)
@@ -31,79 +31,92 @@ fun MeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp,0.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        Spacer(Modifier.height(12.dp))
+        item {
+            Spacer(Modifier.height(36.dp))
 
 
 
-        Text("我的",
-            style = MaterialTheme.typography.displayMedium)
-        Spacer(Modifier.height(32.dp))
+            Text(
+                "我的",
+                style = MaterialTheme.typography.displayMedium
+            )
+            Spacer(Modifier.height(32.dp))
 
-        Row() {
-            ElevatedCard(
-                modifier = Modifier.weight(1f),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Column(
-                    Modifier.padding(16.dp,16.dp,16.dp,8.dp,)
+            Row() {
+                ElevatedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.large
                 ) {
-                    Text("错题本",
+                    Column(
+                        Modifier.padding(16.dp, 16.dp, 16.dp, 8.dp)
+                    ) {
+                        Text(
+                            "错题本",
 //                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text("这里有你答错的所有错题记录，可以反复练习。",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "这里有你答错的所有错题记录，可以反复练习。",
 //                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider()
-                    Spacer(Modifier.height(8.dp))
-                    TextButton({}) {
-                        Text("去复习")
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(8.dp))
+                        TextButton({}) {
+                            Text("去复习")
+                        }
+
+
                     }
 
+                }
+                Spacer(Modifier.weight(0.1f))
+                ElevatedCard(
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    Column(
+                        Modifier.padding(16.dp, 16.dp, 16.dp, 8.dp)
+                    ) {
+                        Text(
+                            "收藏本",
+//                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "这里有你收藏的记录，可以回顾复习。",
+//                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(8.dp))
+                        TextButton({}) {
+                            Text("去复习")
+                        }
+
+
+                    }
 
                 }
 
             }
-            Spacer(Modifier.weight(0.1f))
-            ElevatedCard(
-                modifier = Modifier.weight(1f),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Column(
-                    Modifier.padding(16.dp,16.dp,16.dp,8.dp,)
-                ) {
-                    Text("收藏本",
-//                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text("这里有你收藏的记录，可以回顾复习。",
-//                        modifier = Modifier.padding(12.dp,12.dp,12.dp,12.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider()
-                    Spacer(Modifier.height(8.dp))
-                    TextButton({}) {
-                        Text("去复习")
-                    }
 
+            Spacer(Modifier.height(12.dp))
 
-                }
-
-            }
 
         }
 
     }
-
 }

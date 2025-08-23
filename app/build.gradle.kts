@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.aboutLibraries)
+
 }
 
 android {
@@ -39,7 +41,16 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+}
+
+
+
+// 自动生成开源许可列表
+aboutLibraries {
+    // Remove the "generated" timestamp to allow for reproducible builds
+    excludeFields = arrayOf("generated")
 }
 
 dependencies {
@@ -63,6 +74,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.androidx.datastore.preferences)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -83,6 +96,13 @@ dependencies {
     implementation(libs.fuel.kotlinx.serialization)
 
     implementation(libs.android.lottie.compose)
+
+
+    implementation(libs.aboutlibraries.compose.core)
+    implementation(libs.aboutlibraries.core)
+    implementation(libs.aboutlibraries.compose.m3)
+
+    implementation(project(":Color-Picker"))
 
 
 }

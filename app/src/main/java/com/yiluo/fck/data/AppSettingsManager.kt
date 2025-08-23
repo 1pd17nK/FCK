@@ -30,6 +30,15 @@ class AppSettingsManager(context: Context) {
         set(value) = prefs.edit { putInt(VOLUME, value) }
 
     // 记录一个书名包含记录错题序号，收藏序号，方便保存
+    var day: Long
+        get() = prefs.getLong(DAY, -1)
+        set(value) = prefs.edit { putLong(DAY, value) }
+
+    // 间隔更新天数
+    var update: Int
+        get() = prefs.getInt(UPDATE, 0)
+        set(value) = prefs.edit { putInt(UPDATE, value) }
+
 
 
 
@@ -41,7 +50,8 @@ class AppSettingsManager(context: Context) {
         private const val GRADE ="grade"
         private const val SUBJECT ="subject"
         private const val VOLUME ="volume"
-
+        private const val DAY = "day"
+        private const val UPDATE = "update"
 
     }
 }

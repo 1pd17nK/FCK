@@ -1,4 +1,4 @@
-package jnu.kulipai.exam.ui.anim
+package com.yiluo.fck.ui.anim
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition

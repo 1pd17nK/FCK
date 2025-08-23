@@ -1,8 +1,8 @@
-package com.yiluo.fck.ui.screens.select
-
+package com.yiluo.fck.ui.screens.home
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.kittinunf.fuel.Fuel
@@ -21,7 +21,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
-
 
 // 1. 定义一个数据类来表示整个界面的状态
 data class TranslationUiState(
@@ -42,7 +41,7 @@ sealed class BookState {
 @HiltViewModel
 class HomeViewModel
 @Inject constructor(
-    private val appSettingsManager: AppSettingsManager,
+    val appSettingsManager: AppSettingsManager,
     private val quizManager: QuizManager,
     private val application: Application, // Hilt 可以注入 Application Context
 ) : ViewModel() {
@@ -182,13 +181,32 @@ class HomeViewModel
         }
     }
 
+
+    fun updateRepositoryData() {
+        viewModelScope.launch {
+            val bookName = getBookName(grade, subject, volume)
+
+            _bookState.value = BookState.Loading
+            try {
+                File(application.filesDir, "$bookName.json").delete()
+
+                // 这里直接调用 repository 的逻辑
+                loadBook(application)// 假设 repository 有一个 forceUpdate 参数
+                appSettingsManager.day = System.currentTimeMillis()
+                Toast.makeText(application, "数据已更新！", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(application, "更新失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                _bookState.value = BookState.Error(e.message ?: "更新失败")
+            }
+        }
+    }
+
     //------------------------------------Quiz-------------------------------
     private val _currentQuestionIndex = MutableStateFlow(0)
     val currentQuestionIndex = _currentQuestionIndex.asStateFlow()
 
     private val _isFinish = MutableStateFlow(false)
     val isFinish = _isFinish.asStateFlow()
-
 
 
     // 在答题结束时，导航到结果页

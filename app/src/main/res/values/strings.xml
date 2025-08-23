@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">伐词库</string>
+    <string name="app_version">版本 %1$s (%2$s)</string>
 </resources>

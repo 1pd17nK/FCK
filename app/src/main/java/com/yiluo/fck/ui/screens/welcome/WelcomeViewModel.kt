@@ -13,10 +13,4 @@ class WelcomeViewModel
     private val appSettingsManager: AppSettingsManager
 ) : ViewModel() {
 
-    val isFirstLaunch: Boolean
-        get() = appSettingsManager.isFirstLaunch
-
-    fun setFirstLaunchDone() {
-        appSettingsManager.isFirstLaunch = false
-    }
 }

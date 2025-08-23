@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +45,13 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.QuizScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.SelectScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.yiluo.fck.R
-import com.yiluo.fck.ui.screens.select.BookState
-import com.yiluo.fck.ui.screens.select.HomeViewModel
-import com.yiluo.fck.util.log
-import jnu.kulipai.exam.ui.anim.AnimatedNavigation
+import com.yiluo.fck.ui.anim.AnimatedNavigation
+import com.yiluo.fck.ui.components.BounceUpButton
+import org.json.JSONObject
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Destination<RootGraph>(style = AnimatedNavigation::class)
@@ -58,14 +61,8 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
 
-
-    val listData = remember {
-        mutableListOf("苹果", "香蕉", "梨子")
-    }
-
     val context = LocalContext.current
     val bookState by viewModel.bookState.collectAsStateWithLifecycle()
-    bookState.log()
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lib_reference_winter))
     val progress by animateLottieCompositionAsState(
@@ -104,241 +101,280 @@ fun HomeScreen(
             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
             exit = fadeOut(animationSpec = tween(durationMillis = 50)),
         ) {
+            if (bookState is BookState.Success) {
 
-            LazyColumn(
-            ) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                    ) {
 
-                        Spacer(Modifier.height(12.dp))
+                val bookData = (bookState as? BookState.Success)?.bookData
+                val bookDataLen = bookData?.length() ?: 0
+
+                fun getBookData(targetQuestion: Int, key: String): String {
+                    return bookData?.let {
+                        (bookData[targetQuestion] as JSONObject).get(key)
+                    }.toString()
+                }
+
+                val randomSet = mutableSetOf<Int>()
+
+                while (randomSet.size < 5) {
+                    randomSet.add(Random.nextInt(0, bookDataLen - 1)) // 生成 0..99 的随机数
+                }
+
+
+                val randomWords = remember {
+                    randomSet
+                }
+
+                LazyColumn(
+                ) {
+                    item {
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp, 24.dp, 32.dp, 0.dp)
+                                .fillMaxSize(),
                         ) {
 
-                            Row(modifier = Modifier.fillMaxWidth()) {
+                            Spacer(Modifier.height(12.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(32.dp, 24.dp, 32.dp, 0.dp)
+                            ) {
 
-                                Image(
+                                Row(modifier = Modifier.fillMaxWidth()) {
 
-                                    painter = painterResource(R.drawable.b1),
-                                    contentDescription = null
-                                )
-                                Column(modifier = Modifier.padding(24.dp, 8.dp)) {
-                                    Text(
-                                        "维语精读",
-                                        style = MaterialTheme.typography.bodyLarge
+                                    Image(
+                                        painter = painterResource(R.drawable.b1),
+                                        contentDescription = null,
+                                        modifier = Modifier.clickable(onClick = {
+                                            navigator.navigate(SelectScreenDestination)
+                                        })
                                     )
-                                    Spacer(Modifier.height(24.dp))
+                                    Column(modifier = Modifier.padding(24.dp, 8.dp)) {
+                                        Text(
+                                            "维语精读",
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Spacer(Modifier.height(24.dp))
 
-                                    LinearProgressIndicator(
-                                        progress = { 0.2f },
-                                    )
-                                    Spacer(Modifier.height(12.dp))
+                                        LinearProgressIndicator(
+                                            progress = { 0.2f },
+                                        )
+                                        Spacer(Modifier.height(12.dp))
 
-                                    Text("123/1937")
+                                        Text("123/1937")
 
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        Spacer(Modifier.weight(1f))
-                                        Button(onClick = {
-                                            navigator.navigate(QuizScreenDestination)
-                                        }) {
-                                            Text("去学习")
-                                            Spacer(Modifier.width(4.dp))
+                                        Row(modifier = Modifier.fillMaxWidth()) {
+                                            Spacer(Modifier.weight(1f))
+                                            Button(onClick = {
+                                                navigator.navigate(QuizScreenDestination)
+                                            }) {
+                                                Text("去学习")
+                                                Spacer(Modifier.width(4.dp))
 
-                                            Icon(
-                                                painterResource(R.drawable.arrow_circle_right_24px),
+                                                Icon(
+                                                    painterResource(R.drawable.arrow_circle_right_24px),
 
-                                                contentDescription = null
-                                            )
+                                                    contentDescription = null
+                                                )
+                                            }
                                         }
+
+                                    }
+
+
+                                }
+                                Spacer(Modifier.height(32.dp))
+
+                                Text(
+                                    "今日计划",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(Modifier.height(24.dp))
+
+                                Row {
+                                    // card
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Text(
+                                            "需学习",
+                                            fontSize = 16.sp,
+                                        )
+                                        Spacer(Modifier.height(32.dp))
+                                        Text(
+                                            "0/10",
+                                            style = MaterialTheme.typography.displaySmall
+                                        )
+                                    }
+                                    Spacer(Modifier.weight(0.3f))
+
+                                    //card
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Text(
+                                            "需复习",
+                                            fontSize = 16.sp,
+                                        )
+                                        Spacer(Modifier.height(32.dp))
+                                        Text(
+                                            "0/10",
+                                            style = MaterialTheme.typography.displaySmall
+                                        )
                                     }
 
                                 }
 
+                                Spacer(Modifier.height(32.dp))
+                                Text(
+                                    "随机词汇",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(Modifier.height(32.dp))
+
 
                             }
-                            Spacer(Modifier.height(32.dp))
+                        }
+                    }
 
-                            Text(
-                                "今日计划",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(24.dp))
-
-                            Row {
-                                // card
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
+                    item {
+                        Card(
+                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp, 0.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp, 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
                                     Text(
-                                        "需学习",
-                                        fontSize = 16.sp,
+                                        getBookData(randomWords.elementAt(0), "weiyu"),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
                                     )
-                                    Spacer(Modifier.height(32.dp))
-                                    Text(
-                                        "0/10",
-                                        style = MaterialTheme.typography.displaySmall
+                                    Spacer(Modifier.height(2.dp))
 
+                                    Text(
+                                        getBookData(randomWords.elementAt(0), "dancihanyi"),
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
 
                                 }
-                                Spacer(Modifier.weight(0.3f))
+                                Spacer(Modifier.weight(1f))
+                                Icon(
+                                    painter = painterResource(R.drawable.star_24px),
+                                    contentDescription = null
+                                )
+                            }
 
-                                //card
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+
+                    }
+
+                    items(3) {
+
+                        Card(
+                            modifier = Modifier.padding(24.dp, 0.dp),
+                            shape = RoundedCornerShape(0.dp)
+                        ) {
+
+
+                            Row(
+                                modifier = Modifier.padding(16.dp, 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
                                     Text(
-                                        "需复习",
+                                        getBookData(randomWords.elementAt(it + 1), "weiyu"),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+
+                                    Text(
+                                        getBookData(randomWords.elementAt(it + 1), "dancihanyi"),
                                         fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Spacer(Modifier.height(32.dp))
-                                    Text(
-                                        "0/10",
-                                        style = MaterialTheme.typography.displaySmall
-                                    )
+
                                 }
-
+                                Spacer(Modifier.weight(1f))
+                                Icon(
+                                    painter = painterResource(R.drawable.star_24px),
+                                    contentDescription = null
+                                )
                             }
-
-                            Spacer(Modifier.height(32.dp))
-                            Text(
-                                "随机词汇",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(32.dp))
 
 
                         }
-                    }
-                }
+                        Spacer(Modifier.height(4.dp))
 
-                item {
-                    Card(
-                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp, 0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp, 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    }
+                    item {
+                        Card(
+                            modifier = Modifier.padding(24.dp, 0.dp),
+                            shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
                         ) {
-                            Column {
-                                Text(
-                                    "Apple",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(Modifier.height(2.dp))
 
-                                Text(
-                                    "苹果",
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
 
+                            Row(
+                                modifier = Modifier.padding(16.dp, 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        getBookData(randomWords.elementAt(4), "weiyu"),
+
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+
+                                    Text(
+                                        getBookData(randomWords.elementAt(4), "dancihanyi"),
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                }
+                                Spacer(Modifier.weight(1f))
+                                Icon(
+                                    painter = painterResource(R.drawable.star_24px),
+                                    contentDescription = null
+                                )
                             }
-                            Spacer(Modifier.weight(1f))
-                            Icon(
-                                painter = painterResource(R.drawable.star_24px),
-                                contentDescription = null
-                            )
                         }
-
                     }
 
-                    Spacer(Modifier.height(4.dp))
 
-                }
-
-                items(listData.size) {
-
-                    Card(
-                        modifier = Modifier.padding(24.dp, 0.dp),
-                        shape = RoundedCornerShape(0.dp)
-                    ) {
-
-
-                        Row(
-                            modifier = Modifier.padding(16.dp, 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    "Apple",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(Modifier.height(2.dp))
-
-                                Text(
-                                    "苹果",
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                            }
-                            Spacer(Modifier.weight(1f))
-                            Icon(
-                                painter = painterResource(R.drawable.star_24px),
-                                contentDescription = null
-                            )
-                        }
-
-
+                    item {
+                        Spacer(Modifier.height(32.dp))
                     }
-                    Spacer(Modifier.height(4.dp))
-
                 }
-                item {
-                    Card(
-                        modifier = Modifier.padding(24.dp, 0.dp),
-                        shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
-                    ) {
 
 
-                        Row(
-                            modifier = Modifier.padding(16.dp, 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    "Apple",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(Modifier.height(2.dp))
+                if (viewModel.appSettingsManager.update != 0) {
+                    // 第一次打开，记录时间
+                    val firstOpenTime by remember { mutableLongStateOf(viewModel.appSettingsManager.day) }
 
-                                Text(
-                                    "苹果",
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                            }
-                            Spacer(Modifier.weight(1f))
-                            Icon(
-                                painter = painterResource(R.drawable.star_24px),
-                                contentDescription = null
-                            )
+                    if (firstOpenTime == -1L) {
+                        viewModel.appSettingsManager.day = System.currentTimeMillis()
+                    } else {
+                        if ((System.currentTimeMillis() - firstOpenTime) / (1000 * 60 * 60 * 24) >= viewModel.appSettingsManager.update) {
+                            BounceUpButton({
+                                viewModel.updateRepositoryData()
+                            })
                         }
                     }
                 }
-                item {
-                    Spacer(Modifier.height(32.dp))
-
-
-                }
-
             }
         }
     }

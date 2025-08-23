@@ -13,6 +13,12 @@ class SelectViewModel
     private val appSettingsManager: AppSettingsManager
 ) : ViewModel() {
 
+    val isFirstLaunch: Boolean
+        get() = appSettingsManager.isFirstLaunch
+
+    fun setFirstLaunchDone() {
+        appSettingsManager.isFirstLaunch = false
+    }
 
     val grade: Int
         get() = appSettingsManager.grade

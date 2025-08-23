@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowRightAlt
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -43,9 +43,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.yiluo.fck.ui.screens.select.BookState
-import com.yiluo.fck.ui.screens.select.HomeViewModel
-import jnu.kulipai.exam.ui.anim.AnimatedNavigation
+import com.yiluo.fck.ui.anim.AnimatedNavigation
+import com.yiluo.fck.ui.screens.home.BookState
+import com.yiluo.fck.ui.screens.home.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -116,10 +116,9 @@ fun QuizScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(24.dp, 24.dp, 24.dp, 0.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    Spacer(Modifier.height(12.dp))
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -142,15 +141,17 @@ fun QuizScreen(
                         )
                     }
                     Spacer(Modifier.height(48.dp))
-
-                    // 随机答案
-                    val options = remember {
+                    val optionss =
                         mutableListOf(
                             currentQuestionIndex,
                             randomIntExcluding(0, bookDataLen - 1, currentQuestionIndex),
                             randomIntExcluding(0, bookDataLen - 1, currentQuestionIndex),
                             randomIntExcluding(0, bookDataLen - 1, currentQuestionIndex)
                         )
+                    optionss.shuffle()
+                    // 随机答案
+                    val options = remember {
+                        optionss
                     }
 //                    {
 //                        listOf(
@@ -170,7 +171,9 @@ fun QuizScreen(
                         OutlinedCard(
                             colors = CardDefaults.cardColors(
                                 containerColor = when (answerState) {
-                                    0 -> Color(0x00000000) // 默认透明
+                                    0 -> if (isSelect && index == targetQuestion) MaterialTheme.colorScheme.tertiary else Color(
+                                        0x00000000
+                                    ) // 默认透明
                                     1 -> MaterialTheme.colorScheme.tertiary
                                     2 -> MaterialTheme.colorScheme.error
                                     else -> Color(0x00000000)
@@ -202,7 +205,7 @@ fun QuizScreen(
                         ) {
                             Row {
                                 Text(
-                                    text = getBookData(index,"dancihanyi"),
+                                    text = getBookData(index, "dancihanyi"),
                                     modifier = Modifier.padding(24.dp),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
@@ -213,9 +216,21 @@ fun QuizScreen(
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
+                                Spacer(Modifier.weight(1f))
+                                if (isSelect) {
+                                    Icon(
 
+                                        if (index == targetQuestion) {
+                                            Icons.Default.Check
+                                        } else {
+                                            Icons.Default.Close
+                                        },
+                                        modifier = Modifier.padding(24.dp),
+                                        contentDescription = null
+                                    )
+
+                                }
                             }
-
                         }
                         Spacer(Modifier.height(16.dp))
 
@@ -230,10 +245,10 @@ fun QuizScreen(
                             )
                             .align(Alignment.CenterHorizontally),
                         onClick = {
-                            when(isRight){
-                                0->"提示"
-                                1->"Good!"
-                                2->viewModel.nextQuestion()
+                            when (isRight) {
+                                0 -> "提示"
+                                1 -> "Good!"
+                                2 -> viewModel.nextQuestion()
                                 else -> ""
                             }
                         }
@@ -245,21 +260,23 @@ fun QuizScreen(
                         ) {
                             //全新加载变形等待
                             Icon(
-                                when(isRight){
-                                    0->Icons.Default.TipsAndUpdates
-                                    1->Icons.Default.Check
-                                    2->Icons.Default.NavigateNext
-                                    else ->Icons.Default.TipsAndUpdates
+                                when (isRight) {
+                                    0 -> Icons.Default.TipsAndUpdates
+                                    1 -> Icons.Default.Check
+                                    2 -> Icons.AutoMirrored.Filled.NavigateNext
+                                    else -> Icons.Default.TipsAndUpdates
                                 },
                                 contentDescription = null,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(when(isRight){
-                                0->"提示"
-                                1->"Good!"
-                                2->"下一题"
-                                else -> ""
-                            })
+                            Text(
+                                when (isRight) {
+                                    0 -> "提示"
+                                    1 -> "Good!"
+                                    2 -> "下一题"
+                                    else -> ""
+                                }
+                            )
                         }
                     }
 

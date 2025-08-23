@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "伐词库"
 include(":app")
- 
+include(":Color-Picker")
