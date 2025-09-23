@@ -1,5 +1,8 @@
 package com.yiluo.fck.ui.screens.home
 
+
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,21 +19,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,19 +68,24 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.yiluo.fck.R
 import com.yiluo.fck.ui.anim.AnimatedNavigation
 import com.yiluo.fck.ui.components.BounceUpButton
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import kotlin.random.Random
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Destination<RootGraph>(style = AnimatedNavigation::class)
 @Composable
 fun HomeScreen(
     navigator: DestinationsNavigator,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(LocalActivity.current as ComponentActivity)
 ) {
 
-    val context = LocalContext.current
     val bookState by viewModel.bookState.collectAsStateWithLifecycle()
+    val showUnitBottomSheet by viewModel.showUnitBottomSheet.collectAsStateWithLifecycle()
+    val availableUnits by viewModel.availableUnits.collectAsStateWithLifecycle()
+
+    var currentPos by remember { mutableIntStateOf(0) }
+    var selectedUnit by remember { mutableIntStateOf(0) }
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lib_reference_winter))
     val progress by animateLottieCompositionAsState(
@@ -71,6 +94,16 @@ fun HomeScreen(
         iterations = LottieConstants.IterateForever,
         speed = 1f,
     )
+
+    LaunchedEffect(viewModel.getPos()) {
+        currentPos = viewModel.getPos()
+        selectedUnit = viewModel.getSelectedUnit()
+    }
+
+
+    val bookData = (bookState as? BookState.Success)?.bookData
+    bookData?.length() ?: 0
+
 
     Box(
         modifier = Modifier
@@ -116,7 +149,7 @@ fun HomeScreen(
                 val randomSet = mutableSetOf<Int>()
 
                 while (randomSet.size < 5) {
-                    randomSet.add(Random.nextInt(0, bookDataLen - 1)) // 生成 0..99 的随机数
+                    randomSet.add(Random.nextInt(0, bookDataLen - 1))
                 }
 
 
@@ -124,8 +157,7 @@ fun HomeScreen(
                     randomSet
                 }
 
-                LazyColumn(
-                ) {
+                LazyColumn {
                     item {
                         Column(
                             modifier = Modifier
@@ -156,11 +188,14 @@ fun HomeScreen(
                                         Spacer(Modifier.height(24.dp))
 
                                         LinearProgressIndicator(
-                                            progress = { 0.2f },
+                                            progress = {
+                                                currentPos
+                                                    .toFloat() / bookDataLen.toFloat()
+                                            },
                                         )
                                         Spacer(Modifier.height(12.dp))
 
-                                        Text("123/1937")
+                                        Text("${currentPos}/$bookDataLen")
 
                                         Row(modifier = Modifier.fillMaxWidth()) {
                                             Spacer(Modifier.weight(1f))
@@ -182,7 +217,22 @@ fun HomeScreen(
 
 
                                 }
-                                Spacer(Modifier.height(32.dp))
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    ),
+                                    onClick = {
+                                        viewModel.showUnitSelection()
+                                    }
+                                ) {
+                                    Text(
+                                        "第${viewModel.convertToChineseNumber(selectedUnit)}单元",
+                                        modifier = Modifier.padding(8.dp),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        style = MaterialTheme.typography.labelLarge,
+                                    )
+                                }
+                                Spacer(Modifier.height(12.dp))
 
                                 Text(
                                     "今日计划",
@@ -203,7 +253,7 @@ fun HomeScreen(
                                         )
                                         Spacer(Modifier.height(32.dp))
                                         Text(
-                                            "0/10",
+                                            "${viewModel.getTodayCount()}/10",
                                             style = MaterialTheme.typography.displaySmall
                                         )
                                     }
@@ -242,6 +292,9 @@ fun HomeScreen(
 
                     item {
                         Card(
+                            onClick = {
+
+                            },
                             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -267,10 +320,27 @@ fun HomeScreen(
 
                                 }
                                 Spacer(Modifier.weight(1f))
-                                Icon(
-                                    painter = painterResource(R.drawable.star_24px),
-                                    contentDescription = null
-                                )
+                                var isStar by remember { mutableStateOf(false) }
+                                IconButton(
+                                    {
+                                        if (isStar) {
+                                            isStar = false
+                                            viewModel.removeFavorite(randomWords.elementAt(0))
+                                        } else {
+                                            isStar = true
+                                            viewModel.addFavorite(randomWords.elementAt(0))
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+
+                                        painter = if (isStar) painterResource(R.drawable.star_fill_24px) else painterResource(
+                                            R.drawable.star_24px
+                                        ),
+                                        contentDescription = null
+                                    )
+                                }
+
                             }
 
                         }
@@ -307,10 +377,26 @@ fun HomeScreen(
 
                                 }
                                 Spacer(Modifier.weight(1f))
-                                Icon(
-                                    painter = painterResource(R.drawable.star_24px),
-                                    contentDescription = null
-                                )
+                                var isStar by remember { mutableStateOf(false) }
+                                IconButton(
+                                    {
+                                        if (isStar) {
+                                            isStar = false
+                                            viewModel.removeFavorite(randomWords.elementAt(it + 1))
+                                        } else {
+                                            isStar = true
+                                            viewModel.addFavorite(randomWords.elementAt(it + 1))
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+
+                                        painter = if (isStar) painterResource(R.drawable.star_fill_24px) else painterResource(
+                                            R.drawable.star_24px
+                                        ),
+                                        contentDescription = null
+                                    )
+                                }
                             }
 
 
@@ -346,10 +432,26 @@ fun HomeScreen(
 
                                 }
                                 Spacer(Modifier.weight(1f))
-                                Icon(
-                                    painter = painterResource(R.drawable.star_24px),
-                                    contentDescription = null
-                                )
+                                var isStar by remember { mutableStateOf(false) }
+                                IconButton(
+                                    {
+                                        if (isStar) {
+                                            isStar = false
+                                            viewModel.removeFavorite(randomWords.elementAt(4))
+                                        } else {
+                                            isStar = true
+                                            viewModel.addFavorite(randomWords.elementAt(4))
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+
+                                        painter = if (isStar) painterResource(R.drawable.star_fill_24px) else painterResource(
+                                            R.drawable.star_24px
+                                        ),
+                                        contentDescription = null
+                                    )
+                                }
                             }
                         }
                     }
@@ -374,6 +476,46 @@ fun HomeScreen(
                             })
                         }
                     }
+                }
+            }
+        }
+        // ModalBottomSheet for unit selection
+        if (showUnitBottomSheet) {
+            val scope = rememberCoroutineScope()
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.hideUnitSelection() },
+                sheetState = sheetState,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = "选择单元",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    LazyColumn {
+                        items(availableUnits) { unit ->
+                            ListItem(
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color(0x00000000)
+                                ),
+                                headlineContent = { Text(unit.name) },
+                                supportingContent = if (unit.description.isNotEmpty()) {
+                                    { Text(unit.description) }
+                                } else null,
+                                modifier = Modifier.clickable {
+                                    viewModel.selectUnit(unit.id)
+                                    scope.launch {
+                                        sheetState.hide()
+                                    }.invokeOnCompletion {
+                                        viewModel.hideUnitSelection()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

@@ -39,10 +39,14 @@ import com.ramcosta.composedestinations.generated.destinations.MeScreenDestinati
 import com.ramcosta.composedestinations.generated.destinations.QuizScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsAppearanceScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.StarBookScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.TranScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.WelcomeScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.WrongBookScreenDestination
 import com.yiluo.fck.data.AppSettingsManager
 import com.yiluo.fck.ui.components.BottomBar
+import com.yiluo.fck.ui.screens.notebook.StarBookScreen
+import com.yiluo.fck.ui.screens.notebook.WrongBookScreen
 import com.yiluo.fck.ui.theme.ThemeSettingsManager
 import com.yiluo.fck.ui.theme.伐词库Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -122,24 +126,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        if (currentRoute == QuizScreenDestination.route) {
-                            TopAppBar(
-                                title = {
-                                },
-                                navigationIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            navController.popBackStack()
-                                        }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.ArrowBackIosNew,
-                                            contentDescription = null
-                                        )
-                                    }
-                                },
-                            )
-                        }
                     },
                     bottomBar = {
                         // 根据当前路由判断是否显示 bottomBar
@@ -178,7 +164,10 @@ class MainActivity : ComponentActivity() {
                                     SettingScreenDestination.route,
                                     AboutScreenDestination.route,
                                     SettingsAppearanceScreenDestination.route,
-                                    AboutLibrariesScreenDestination.route
+                                    AboutLibrariesScreenDestination.route,
+                                    WrongBookScreenDestination.route,
+                                    StarBookScreenDestination.route,
+                                    QuizScreenDestination.route
                                 )
                             ) Modifier else Modifier.padding(innerPadding)
                         )

@@ -29,6 +29,11 @@ class AppSettingsManager(context: Context) {
         get() = prefs.getInt(VOLUME, -1)
         set(value) = prefs.edit { putInt(VOLUME, value) }
 
+    // 当前选中的单元
+    var currentUnit: Int
+        get() = prefs.getInt(CURRENT_UNIT, 1) // 默认为第一单元
+        set(value) = prefs.edit { putInt(CURRENT_UNIT, value) }
+
     // 记录一个书名包含记录错题序号，收藏序号，方便保存
     var day: Long
         get() = prefs.getLong(DAY, -1)
@@ -50,6 +55,7 @@ class AppSettingsManager(context: Context) {
         private const val GRADE ="grade"
         private const val SUBJECT ="subject"
         private const val VOLUME ="volume"
+        private const val CURRENT_UNIT = "current_unit"
         private const val DAY = "day"
         private const val UPDATE = "update"
 

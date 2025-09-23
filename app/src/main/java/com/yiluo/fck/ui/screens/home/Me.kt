@@ -21,6 +21,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.generated.destinations.StarBookScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.WrongBookScreenDestination
 import com.yiluo.fck.ui.anim.AnimatedNavigation
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -34,7 +36,7 @@ fun MeScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp,0.dp),
+            .padding(24.dp, 0.dp),
         horizontalAlignment = Alignment.Start
     ) {
         item {
@@ -71,7 +73,9 @@ fun MeScreen(
                         Spacer(Modifier.height(16.dp))
                         HorizontalDivider()
                         Spacer(Modifier.height(8.dp))
-                        TextButton({}) {
+                        TextButton({
+                            navigator.navigate(WrongBookScreenDestination)
+                        }) {
                             Text("去复习")
                         }
 
@@ -102,7 +106,10 @@ fun MeScreen(
                         Spacer(Modifier.height(16.dp))
                         HorizontalDivider()
                         Spacer(Modifier.height(8.dp))
-                        TextButton({}) {
+                        TextButton({
+                            navigator.navigate(StarBookScreenDestination)
+
+                        }) {
                             Text("去复习")
                         }
 

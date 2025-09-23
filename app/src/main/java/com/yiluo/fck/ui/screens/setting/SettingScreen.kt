@@ -1,5 +1,7 @@
 package com.yiluo.fck.ui.screens.setting
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.UpdateDisabled
@@ -24,6 +27,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -32,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
@@ -45,6 +50,7 @@ import com.yiluo.fck.ui.components.ScrollbarLazyColumn
 import com.yiluo.fck.ui.components.collapsing_topappbar.CollapsingTitle
 import com.yiluo.fck.ui.components.collapsing_topappbar.CollapsingTopAppBar
 import com.yiluo.fck.ui.components.collapsing_topappbar.rememberTopAppBarScrollBehavior
+import com.yiluo.fck.ui.screens.home.HomeViewModel
 import com.yiluo.fck.ui.screens.setting.components.AppThemePreviewItem
 
 @Destination<RootGraph>(style = AnimatedNavigation::class)
@@ -52,10 +58,11 @@ import com.yiluo.fck.ui.screens.setting.components.AppThemePreviewItem
 @Composable
 fun SettingScreen(
     viewModel: SettingViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    homeViewModel: HomeViewModel = hiltViewModel(LocalActivity.current as ComponentActivity)
 ) {
     var updateModeDialog by rememberSaveable { mutableStateOf(false) }
-    var currentUpdate by rememberSaveable { mutableStateOf(viewModel.appPre.update) }
+    var currentUpdate by rememberSaveable { mutableIntStateOf(viewModel.appPre.update) }
 
     SettingsScaffoldLazyColumn(
         titleText = "设置",
@@ -76,6 +83,18 @@ fun SettingScreen(
                     painter = rememberVectorPainter(Icons.Outlined.Palette)
                 )
             }
+
+            item {
+                PreferenceRow(
+                    title = "立即更新",
+                    subtitle = "请不要多次点击",
+                    onClick = {
+                        homeViewModel.updateRepositoryData()
+                    },
+                    painter = rememberVectorPainter(Icons.Default.Download)
+                )
+            }
+
 
             item {
                 PreferenceRow(

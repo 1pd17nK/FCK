@@ -3,6 +3,9 @@ package com.yiluo.fck.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Singleton
 
 @Singleton
@@ -80,4 +83,60 @@ class QuizManager(private val context: Context) {
         val idString = sharedPreferences.getString("${bookName}_favorite_questions", null)
         return idString?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
     }
+
+
+    // ========== 今日做题数相关 ==========
+    private val KEY_TODAY_COUNT = "today_count"
+    private val KEY_LAST_DATE = "last_date"
+
+    // ========== 公共方法：获取错题和收藏数据 ==========
+
+    /** 获取指定书籍的错题列表 */
+    fun getWrongQuestionsList(bookName: String): List<Int> {
+        return getWrongQuestions(bookName)
+    }
+
+    /** 获取指定书籍的收藏列表 */
+    fun getFavoriteQuestionsList(bookName: String): List<Int> {
+        return getFavoriteQuestions(bookName)
+    }
+
+    private fun getTodayDate(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(Date())
+    }
+
+    /** 获取今日做题数（会检查日期，若跨天则自动清零） */
+    fun getTodayCount(): Int {
+        val lastDate = sharedPreferences.getString(KEY_LAST_DATE, null)
+        val today = getTodayDate()
+        if (lastDate != today) {
+            // 新的一天，清零
+            resetTodayCount(today)
+        }
+        return sharedPreferences.getInt(KEY_TODAY_COUNT, 0)
+    }
+
+    /** 答对/答错题目时调用 +1 */
+    fun increaseTodayCount() {
+        val lastDate = sharedPreferences.getString(KEY_LAST_DATE, null)
+        val today = getTodayDate()
+        if (lastDate != today) {
+            resetTodayCount(today)
+        }
+        val newCount = sharedPreferences.getInt(KEY_TODAY_COUNT, 0) + 1
+        sharedPreferences.edit {
+            putInt(KEY_TODAY_COUNT, newCount)
+            putString(KEY_LAST_DATE, today)
+        }
+    }
+
+    /** 手动清零 */
+    private fun resetTodayCount(today: String) {
+        sharedPreferences.edit {
+            putInt(KEY_TODAY_COUNT, 0)
+            putString(KEY_LAST_DATE, today)
+        }
+    }
+
 }
