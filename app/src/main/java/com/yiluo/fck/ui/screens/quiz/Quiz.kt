@@ -1,8 +1,13 @@
 package com.yiluo.fck.ui.screens.quiz
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -102,6 +107,7 @@ fun QuizScreen(
     val currentQuestionIndex by viewModel.currentQuestionIndex.collectAsStateWithLifecycle()
 
     var isStar by remember { mutableStateOf(viewModel.isFavorite(currentQuestionIndex)) }
+    var isTips by remember { mutableStateOf(false) }
 
     val isFinish by viewModel.isFinish.collectAsStateWithLifecycle()
     if (bookDataLen != 0)
@@ -191,6 +197,21 @@ fun QuizScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )
+                            Spacer(Modifier.height(8.dp))
+                            AnimatedVisibility(
+                                visible = isTips,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Text(
+                                    bookData?.let {
+                                        (bookData[targetQuestion] as JSONObject).get("juzihanyi")
+                                    }.toString(),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
                         }
                         Spacer(Modifier.height(48.dp))
                         val optionss =
@@ -243,11 +264,13 @@ fun QuizScreen(
                                             scope.launch {
                                                 delay(500)
                                                 isStar = false
+                                                isTips = false
                                                 viewModel.nextQuestion()
                                             }
 
                                         } else {
                                             isSelect = true
+                                            isTips = false
                                             answerState = 2
                                             isRight = 2
                                             // 添加错题
@@ -299,11 +322,15 @@ fun QuizScreen(
                                 .align(Alignment.CenterHorizontally),
                             onClick = {
                                 when (isRight) {
-                                    0 -> "提示"
+                                    0 -> {
+                                        isTips = true
+                                    }
+
                                     1 -> "Good!"
                                     2 -> {
                                         viewModel.nextQuestion()
                                         isStar = false
+                                        isTips = false
                                     }
 
                                     else -> ""
