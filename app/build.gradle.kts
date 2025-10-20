@@ -16,8 +16,8 @@ android {
         applicationId = "com.yiluo.fck"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,7 +29,7 @@ android {
             isEnable = true
             // 重置默认列表
             reset()
-            // 包含的架构：32位和64位 ARM
+            // 包含的架构：64位 ARM
             include("arm64-v8a")
             // 是否生成通用 APK（包含所有架构）
             // 设置为 true 会额外生成一个包含所有架构的 APK
@@ -48,11 +48,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
-        jvmToolchain(11)
+        jvmToolchain(17)
     }
     buildFeatures {
         compose = true

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.AboutLibrariesScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.TestScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.yiluo.fck.BuildConfig
 import com.yiluo.fck.R
@@ -226,9 +227,7 @@ fun AboutScreen(
 
                     // 检查是否达到目标次数
                     if (tapCount >= requiredClicks) {
-//                        navigator.navigate(EmojiEasterEggScreenDestination)
-
-
+                        navigator.navigate(TestScreenDestination)
                         tapCount = 0
                     }
                 }

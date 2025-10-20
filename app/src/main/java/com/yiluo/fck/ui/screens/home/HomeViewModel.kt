@@ -22,6 +22,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.max
+import kotlin.math.min
 
 // 1. 定义一个数据类来表示整个界面的状态
 data class TranslationUiState(
@@ -35,7 +37,8 @@ data class TranslationUiState(
 
 sealed class BookState {
     data object Loading : BookState()
-    data class Success(val bookData: JSONArray) : BookState()
+    // 更改 Success 状态，添加 unitIndexMap 以存储 class 到索引的映射
+    data class Success(val bookData: JSONArray, val unitIndexMap: Map<Int, Int>) : BookState()
     data class Error(val message: String) : BookState()
 }
 
@@ -61,23 +64,18 @@ class HomeViewModel
     private val _showUnitBottomSheet = MutableStateFlow(false)
     val showUnitBottomSheet = _showUnitBottomSheet.asStateFlow()
 
-    // 直接在声明时初始化单元列表
-    private val _availableUnits = MutableStateFlow(
-        (1..45).map { unitNumber ->
-            Unit(
-                id = unitNumber,
-                name = "第${convertToChineseNumber(unitNumber)}单元",
-                description = "单元 $unitNumber 学习内容"
-            )
-        }
-    )
+    // 动态生成的可用单元列表，初始化为空列表
+    private val _availableUnits = MutableStateFlow<List<Unit>>(emptyList())
     val availableUnits = _availableUnits.asStateFlow()
+
+    // 存储 class 值到 JSONArray 索引的映射
+    private var unitIndexMap: Map<Int, Int> = emptyMap()
 
     init {
         loadBook(application)
     }
 
-
+    // ... (chineseNumberToInt, convertToChineseNumber 函数保持不变) ...
     fun chineseNumberToInt(chinese: String): Int {
         val map = mapOf(
             '零' to 0, '一' to 1, '二' to 2, '三' to 3, '四' to 4,
@@ -125,6 +123,7 @@ class HomeViewModel
         }
     }
 
+
     // 显示单元选择底部弹出
     fun showUnitSelection() {
         _showUnitBottomSheet.value = true
@@ -135,37 +134,40 @@ class HomeViewModel
         _showUnitBottomSheet.value = false
     }
 
-
-    fun finddancihanyi(bookData: JSONArray, word: String): Int {
-        for (i in 0 until bookData.length()) {
-            val item = bookData.getJSONObject(i)
-            if (item.getString("dancihanyi") == word) {
-                return i
-            }
-        }
-        return -1
-    }
+    /* 旧的 finddancihanyi 函数已移除，逻辑整合到 loadBook 和 selectUnit 中 */
 
     fun getSelectedUnit(): Int {
         return appSettingsManager.currentUnit
     }
 
-    // 选择单元
+    /**
+     * 选择单元。使用 unitIndexMap 来获取 class 对应的起始索引。
+     */
     fun selectUnit(unitId: Int) {
+        // 1. 更新当前选中的单元ID
         appSettingsManager.currentUnit = unitId
-        if (_bookState.value is BookState.Success) {
-            val bookData = ((_bookState.value) as BookState.Success).bookData
-            val startIndex = finddancihanyi(bookData, "第${chineseNumbers[unitId + 5]}")
-            if (startIndex != -1) {
-                quizManager.setPos(
-                    getBookName(grade, subject, volume),
-                    startIndex
-                )
-            }
+
+        // 2. 查找该单元ID对应的起始索引
+        val startIndex = unitIndexMap[unitId]
+
+        if (startIndex != null && startIndex != -1) {
+            // 3. 如果找到了索引，则更新 QuizManager 的位置
+            quizManager.setPos(
+                getBookName(grade, subject, volume),
+                startIndex
+            )
+            Log.d("HomeViewModel", "Selected Unit $unitId, set quiz position to $startIndex")
+        } else {
+            Log.w("HomeViewModel", "Unit ID $unitId not found in unitIndexMap.")
+            // 如果未找到，可以考虑设置为 0 或给出提示，这里暂时不做处理，保持原有 quizManager.getPos()
         }
 
-
+        // 确保 UI 上的 Quiz 状态也更新
+        _currentQuestionIndex.value = getPos()
+        _isFinish.value = false
     }
+
+    // ... (grade, subject, volume, setgsv, onOriginalTextChanged, onModeChanged, translate 保持不变) ...
 
     val grade: Int
         get() = appSettingsManager.grade
@@ -264,7 +266,9 @@ class HomeViewModel
         return objects[subject] + numbers[grade] + fence[volume]
     }
 
-    // 在 ViewModel 初始化或需要的时候调用此函数
+    /**
+     * 核心修改：加载书籍数据后，同时解析 class 值，找出最大 class 并构建 unitIndexMap。
+     */
     fun loadBook(context: Context) {
 
         val bookName = getBookName(grade, subject, volume)
@@ -272,25 +276,63 @@ class HomeViewModel
         viewModelScope.launch(Dispatchers.IO) {
             _bookState.value = BookState.Loading
 
-            // 关键：始终使用同一个文件路径
             val destinationFile = File(context.filesDir, "$bookName.json")
 
             try {
-                // 检查缓存是否存在
-                if (destinationFile.exists()) {
-                    // 缓存命中：直接读取文件
-                    val jsonString = destinationFile.readText()
-                    _bookState.value = BookState.Success(JSONArray(jsonString))
+                val jsonString = if (destinationFile.exists()) {
+                    destinationFile.readText()
                 } else {
                     // 缓存未命中：从网络下载
                     Fuel.download("$url$bookName.json")
                         .fileDestination { _, _ -> destinationFile }
                         .awaitUnit()
-
-                    // 下载成功后，再次读取同一个文件
-                    val jsonString = destinationFile.readText()
-                    _bookState.value = BookState.Success(JSONArray(jsonString))
+                    destinationFile.readText()
                 }
+
+                val bookData = JSONArray(jsonString)
+                var maxUnit = 0
+                var minUnit = Int.MAX_VALUE
+                val newUnitIndexMap = mutableMapOf<Int, Int>()
+
+                // 遍历 JSONArray 来找到最大 class 并记录每个 class 第一次出现的索引
+                for (i in 0 until bookData.length()) {
+                    val item = bookData.getJSONObject(i)
+                    // 检查是否存在 "class" 字段
+                    if (item.has("class")) {
+                        try {
+                            // 尝试将 class 值（字符串）转换为整数
+                            val unitId = item.getString("class").toInt()
+                            maxUnit = max(maxUnit, unitId)
+                            minUnit = min(minUnit, unitId)
+
+
+                            // 记录该 unitId 第一次出现的索引
+                            if (!newUnitIndexMap.containsKey(unitId)) {
+                                newUnitIndexMap[unitId] = i
+                            }
+                        } catch (e: Exception) {
+                            Log.e("HomeViewModel", "Error parsing class value at index $i: ${e.message}")
+                            // 忽略无法解析的 class
+                        }
+                    }
+                }
+
+                // 更新状态和单元列表
+                unitIndexMap = newUnitIndexMap.toMap() // 更新 ViewModel 级别的映射
+                _bookState.value = BookState.Success(bookData, unitIndexMap)
+
+                // 根据最大单元数动态生成 _availableUnits
+                _availableUnits.value = (minUnit..maxUnit).map { unitNumber ->
+                    Unit(
+                        id = unitNumber,
+                        name = "第${convertToChineseNumber(unitNumber)}单元",
+                        description = "单元 $unitNumber 学习内容"
+                    )
+                }
+
+                // 确保加载成功后，Quiz 位置也更新
+                _currentQuestionIndex.value = getPos()
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 _bookState.value = BookState.Error(e.message ?: "加载失败")
@@ -305,10 +347,11 @@ class HomeViewModel
 
             _bookState.value = BookState.Loading
             try {
+                // 删除文件，强制重新下载
                 File(application.filesDir, "$bookName.json").delete()
 
-                // 这里直接调用 repository 的逻辑
-                loadBook(application)// 假设 repository 有一个 forceUpdate 参数
+                // 重新加载书籍，会触发下载和解析
+                loadBook(application)
                 appSettingsManager.day = System.currentTimeMillis()
                 Toast.makeText(application, "数据已更新！", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
@@ -334,42 +377,42 @@ class HomeViewModel
         return quizManager.getTodayCount()
     }
 
-    // 在答题结束时，导航到结果页
+    /**
+     * nextQuestion 逻辑需要调整，不再通过匹配汉字数字来判断单元切换，而是直接增加索引。
+     * 只有在 **selectUnit** 时才设置位置。
+     */
     fun nextQuestion() {
-        if (_bookState.value is BookState.Success) {
-            val bookData = ((_bookState.value) as BookState.Success).bookData
-            bookData.getJSONObject(quizManager.getPos(getBookName(grade, subject, volume)) + 1)
-                .let {
-                    Log.d("11111", it.getString("dancihanyi").substring(0, 1))
-
-                    if (it.has("dancihanyi") && it.getString("dancihanyi")
-                            .substring(0, 1) == "第"
-                    ) {
-                        val numbs =
-                            chineseNumberToInt(it.getString("dancihanyi").substringAfter("第"))
-                        Log.d("11111", numbs.toString())
-
-                        selectUnit(numbs - 5)
-                    }
-                }
-        }
         quizManager.increaseTodayCount()
-        quizManager.setPos(
-            getBookName(grade, subject, volume),
-            quizManager.getPos(getBookName(grade, subject, volume)) + 1
-        ) // 重置位置
 
-        if (_bookState.value is BookState.Success) {
-
-            if ((_bookState.value as BookState.Success).bookData.length() - 1 <= _currentQuestionIndex.value) {
-                // 如果已经是最后一题，设置为完成状态
-                _isFinish.value = true
-                return
-            } else {
-                _currentQuestionIndex.value++
-            }
+        // 1. 获取当前书本数据和长度
+        val bookDataLength = if (_bookState.value is BookState.Success) {
+            ((_bookState.value) as BookState.Success).bookData.length()
+        } else {
+            return // 如果数据未加载成功，直接返回
         }
+
+        // 2. 计算下一个位置
+        val nextPos = quizManager.getPos(getBookName(grade, subject, volume)) + 1
+
+        // 3. 判断是否结束
+        if (nextPos >= bookDataLength) {
+            // 如果到达或超过了最后一题，设置为完成状态
+            _isFinish.value = true
+            // 可以选择将 Pos 设置回 0 或保持在末尾
+            // quizManager.setPos(getBookName(grade, subject, volume), nextPos)
+            return
+        }
+
+        // 4. 更新 QuizManager 的位置
+        quizManager.setPos(getBookName(grade, subject, volume), nextPos)
+
+        // 5. 更新 UI 状态
+        _currentQuestionIndex.value = nextPos
+        _isFinish.value = false
     }
+
+    // ... (onWrongAnswer, onFavoriteAnswer, addFavorite, removeFavorite, getWrongQuestions,
+    // getFavoriteQuestions, removeWrongQuestion, isFavorite 函数保持不变) ...
 
     fun onWrongAnswer() {
         quizManager.addWrongQuestion(

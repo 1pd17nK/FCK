@@ -64,6 +64,7 @@ fun SettingScreen(
     var updateModeDialog by rememberSaveable { mutableStateOf(false) }
     var currentUpdate by rememberSaveable { mutableIntStateOf(viewModel.appPre.update) }
 
+
     SettingsScaffoldLazyColumn(
         titleText = "设置",
         navigator = navigator

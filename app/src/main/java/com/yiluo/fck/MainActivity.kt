@@ -40,6 +40,7 @@ import com.ramcosta.composedestinations.generated.destinations.QuizScreenDestina
 import com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsAppearanceScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.StarBookScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.TestScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.TranScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.WelcomeScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.WrongBookScreenDestination
@@ -47,6 +48,7 @@ import com.yiluo.fck.data.AppSettingsManager
 import com.yiluo.fck.ui.components.BottomBar
 import com.yiluo.fck.ui.screens.notebook.StarBookScreen
 import com.yiluo.fck.ui.screens.notebook.WrongBookScreen
+import com.yiluo.fck.ui.screens.test.TestScreen
 import com.yiluo.fck.ui.theme.ThemeSettingsManager
 import com.yiluo.fck.ui.theme.伐词库Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -167,7 +169,8 @@ class MainActivity : ComponentActivity() {
                                     AboutLibrariesScreenDestination.route,
                                     WrongBookScreenDestination.route,
                                     StarBookScreenDestination.route,
-                                    QuizScreenDestination.route
+                                    QuizScreenDestination.route,
+                                    TestScreenDestination.route
                                 )
                             ) Modifier else Modifier.padding(innerPadding)
                         )
