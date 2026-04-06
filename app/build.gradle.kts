@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -10,7 +9,11 @@ plugins {
 
 android {
     namespace = "com.yiluo.fck"
-    compileSdk = 36
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "com.yiluo.fck"
@@ -21,6 +24,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
 
     // ABI 分包配置 - 一次性打包多个架构版本
     splits {
@@ -51,9 +55,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlin {
-        jvmToolchain(17)
-    }
+
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -64,11 +67,18 @@ android {
 
 // 自动生成开源许可列表
 aboutLibraries {
-    // Remove the "generated" timestamp to allow for reproducible builds
-    excludeFields = arrayOf("generated")
+    export {
+        // Define the output path for manual generation
+        // Adjust the path based on your project structure (e.g., composeResources, Android res/raw)
+        outputFile = file("src/main/res/raw/aboutlibraries.json")
+        // Optionally specify the variant for export
+        // variant = "release"
+    }
 }
 
+
 dependencies {
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,9 +91,6 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.ui)
     implementation(libs.androidx.animation)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)

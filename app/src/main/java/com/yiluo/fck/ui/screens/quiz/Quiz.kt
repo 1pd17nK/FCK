@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,7 +64,7 @@ import org.json.JSONObject
 import kotlin.random.Random
 
 @OptIn(
-    ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class,
+    ExperimentalAnimationApi::class,
     ExperimentalMaterial3Api::class
 )
 @Destination<RootGraph>(style = AnimatedNavigation::class)

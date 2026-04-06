@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +44,6 @@ import com.ramcosta.composedestinations.generated.destinations.WelcomeScreenDest
 import com.ramcosta.composedestinations.generated.destinations.WrongBookScreenDestination
 import com.yiluo.fck.data.AppSettingsManager
 import com.yiluo.fck.ui.components.BottomBar
-import com.yiluo.fck.ui.screens.notebook.StarBookScreen
-import com.yiluo.fck.ui.screens.notebook.WrongBookScreen
-import com.yiluo.fck.ui.screens.test.TestScreen
 import com.yiluo.fck.ui.theme.ThemeSettingsManager
 import com.yiluo.fck.ui.theme.伐词库Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,7 +53,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint // Hilt 入口点
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

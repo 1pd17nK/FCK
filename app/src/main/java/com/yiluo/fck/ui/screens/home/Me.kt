@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +25,6 @@ import com.ramcosta.composedestinations.generated.destinations.StarBookScreenDes
 import com.ramcosta.composedestinations.generated.destinations.WrongBookScreenDestination
 import com.yiluo.fck.ui.anim.AnimatedNavigation
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Destination<RootGraph>(style = AnimatedNavigation::class)
 @Composable
 fun MeScreen(

@@ -49,9 +49,9 @@ fun AboutLibrariesScreen(
         },
     ) { innerPadding ->
 
-        val libraries = rememberLibraries(R.raw.aboutlibraries)
+//        val libraries = rememberLibraries(R.raw.aboutlibraries)
         LibrariesContainer(
-            libraries = libraries.value,
+//            libraries = libraries.value,
             modifier = Modifier.fillMaxSize().padding(innerPadding)
         )
     }
